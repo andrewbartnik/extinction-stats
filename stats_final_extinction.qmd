@@ -1,0 +1,332 @@
+---
+title: "Exploring Species Extinction"
+author: "Andrew Bartnik"
+format: html
+editor: visual
+---
+
+```{r include=FALSE}
+library(kableExtra)
+library(tibble)
+library(generics)
+source('/Users/andrewbartnik/Desktop/MEDS/fall/stats/statsfinal/cleaning.R')
+source('/Users/andrewbartnik/Desktop/MEDS/fall/stats/statsfinal/Modeling.R')
+source('/Users/andrewbartnik/Desktop/MEDS/fall/stats/statsfinal/exploration.R')
+source('/Users/andrewbartnik/Desktop/MEDS/fall/stats/statsfinal/spatial.R')
+```
+
+# Introduction and Motivation
+
+### History of Extinction
+
+Species extinction is a normal part of Earth's natural history, as over 99.9% of species to ever have existed on Earth have gone extinct[^1]. Background extinction rates under normal conditions is expected to between 0.1 - 1 species of vertebrates to go extinct every 100 years per 10,000 species[^2]. However, throughout Earth's history there have been calamitous events such as asteroid impacts, volcanic eruptions, and sudden atmospheric changes that have rapidly changed the conditions on Earth to be unsuitable for life. The worst of these extinction events, the Permian extinction, is thought to have killed off 90% of all species on Earth.
+
+[^1]: Barnosky, A., Matzke, N., Tomiya, S. *et al.* Has the Earth's sixth mass extinction already arrived?. *Nature* **471**, 51--57 (2011). https://doi.org/10.1038/nature09678
+
+[^2]: Ceballos G, Ehrlich PR, Barnosky AD, García A, Pringle RM, Palmer TM. Accelerated modern human-induced species losses: Entering the sixth mass extinction. Sci Adv. 2015 Jun 19;1(5):e1400253. doi: 10.1126/sciadv.1400253. PMID: 26601195; PMCID: PMC4640606.
+
+The current species extinction rate is estimated to be between 1,000 and 10,000 times higher than the normal background extinction rate[^3], which is enough to consider our current time period the 6th mass extinction event - due to various human activities.
+
+[^3]: Barnosky, A., Matzke, N., Tomiya, S. et al. Has the Earth's sixth mass extinction already arrived?. Nature 471, 51--57 (2011). https://doi.org/10.1038/nature09678
+
+![](images/big_five.png)
+
+\[[Figure 1. The Big Five Mass Extinctions](https://ourworldindata.org/extinctions)\]
+
+### Extinction Today
+
+You may be familiar with some of the species that have recently gone extinct due to human activity. Among these are the Chinese River dolphin, which lived in the Yangtze river of China and was last seen in 2007 - thought to be driven to extinction due to heavy use of the river for fishing, transportation and hydroelectricity.
+
+![](images/baiji.jpeg)
+
+The Tasmanian Tiger which lived on Tasmania, a small island south east of Australia, was hunted to extinction in the 1930s
+
+![](images/tazzie_tiger.jpeg)
+
+And the famous Dodo bird, endemic to the island of Mauritius, it lacked adaptations to prevent its own extinction from hunting by sailors and habitat destruction.
+
+![](images/dodo.webp)
+
+### Why Study Extinction?
+
+We care about this because species provide us not only with important sources of medicine, food, and other various products, but also play important roles in each of their respective ecosystems on which much of our societies depend. Each species also helps us elucidate the story of life's history on Earth and contextualizes our place on Earth and our relationship with the natural world. More importantly however, species have intrinsic value regardless of what they provide for humans, and each one lost is a tragedy in its own right.
+
+Its important to understand what the factors are that render species vulnerable to extinction, as well as what the mechanisms of extinction are and how they work. Extinction is notoriously difficult to study for reasons I will discuss in the issues section, but we can hopefully use some of these findings to identify which species' may be more or less vulnerable and better protect them and their ecosystems from extinction and collapse.
+
+## Data
+
+For this analysis, I used data from the IUCN redlist of threatened species[^4] to investigate some of the factors that I suspected may influence extinction. For simplicitly, I will only be focusing on species within the kingdom Animalia. Below is a map I used to explore some of the characteristics of extinct species mainly out of curiosity, but I believe that it contextualizes our data a little bit better and is worth exploring. 
+
+[^4]: https://www.iucnredlist.org/search
+
+
+```{r echo = FALSE}
+map
+```
+
+### Cleaning
+
+After cleaning the data, each row represented one species with a unique assessment I.D, and each column contained a variable that I thought might influence extinction. The variables that I focused on were: species endemism, habitat type, the type of threat faced, human use, and taxonomy.
+
+```{r}
+head(predictors_2)
+```
+
+### Modeling
+
+I ran a logistic linear regression on each of these variables individually to try and predict extinct (1) or extant (0) - to investigate which categories in each variable were more highly associated with extinction. I then made a more general logistic regression using each of these variables as predictors. Comparing the coefficients of the variables from their individual models to their coefficients from the big model, I was able evaluate the robustness of each variable.
+
+Our logistic regression uses the following logit function: $$\operatorname{logit}(p)=\log \left(\frac{p}{1-p}\right)=\beta_0+\beta_1  x + \varepsilon $$
+
+Where $\beta_0$ is our intercept, and $\beta_1$ is the coefficient for a two-level factor variable that toggles on when we are not evaluating our reference category. We will use this expression for each of our variables, and the only thing that will change is the number of $\beta$. For a variable with $i$ levels, we will have $i - 1$ values of $\beta$
+
+I then used a stepwise function to sequentially add variables to see which combination of variables do best at predicting species extinction.
+
+#### Endemism
+
+I first investigated endemism - a species endemic to Santa Barbra means it is found nowhere else in the world outside of Santa Barbara. This seemed like a good place to start, since an endemic species is geographically and genetically restricted to one location which seems like it would make it much more prone to extinction than a more dispersed species. Below is a mosaic plot to see if there is an obvious correlation.
+
+```{r echo = FALSE}
+i
+```
+
+Here is the R output for the model summary:
+```{r}
+summary(endemism)
+```
+
+Since our p-value is far below any of the conventional significance levels, it looks like endemism on its own is significant in predicting extinction.
+
+The coefficients don't tell us much since we're using a logistic regression, and we need our output in the form
+
+After some rearranging, we get an expression that we can use to calculate how much more likely an endemic species is to be extinct than a non-endemic species. We will use this approach for each of our variables. $$\hat p = \frac{e^{\beta_0 + \beta_1 x}}{1+ e^{\beta_0 + \beta_1 x}}$$
+
+So we have to do a bit of manipulation to make this coefficient interpretable. We're going to calculate the right hand side of our equation above for endemic species (x = 1 since its a categorical variable), and non-endemic species (x = 0). We will use this approach for each of our significant levels.
+
+Our results show that an endemic species is 1.75% more likely to be extinct than a species which isn't endemic.
+
+#### Habitat
+
+I then investigated the type of habitat the species lives in. Running a logistic regression model only on habitat shows that the Cave habitat (our reference group, when x = 0) is significant - with a minimal p-value.
+
+Wetlands and Forest habitats are also significant at a 0.05 significance level, and Marine Neritic habitats are significant at a significance level of 0.01. Let's turn the coefficients into something more interpretable as we did above.
+
+```{r}
+summary(habitat)
+```
+
+```{r include = FALSE}
+#probability for caves
+caves <- function(p) {(1-p)*exp(-4.8462) - p}
+caves_p <- uniroot(caves, interval = c(-1000, 1000))$root * 100
+caves_p
+
+
+#probability for Marine Neritic
+marine <- function(p) {(1-p)*exp(-4.8462 - 1.5899) - p}
+uniroot(marine, interval = c(-1000, 1000))$root * 100 - caves_p
+
+#probability for Forest
+forest <- function(p) {(1-p)*exp(-4.8462 + 0.9932) - p}
+uniroot(forest, interval = c(-1000, 1000))$root * 100 - caves_p
+
+#Probability for Wetlands
+wetlands <- function(p) {(1-p)*exp(-4.8462 + 1.1697) - p}
+uniroot(wetlands, interval = c(-1000, 1000))$root * 100 - caves_p
+
+```
+
+Summarizing our significant results in comparison to the reference group:
+
+Species living in a Cave/Subterranean habitat have a 0.78% chance of also being extinct.
+
+Species living in a Marine Neritic habitat have 0.619% LESS of a chance of being extinct than species living in a Cave/Subterranean habitat.
+
+Species living in a Forest habitat have a 1.3% MORE of a chance of being extinct than species living in a Cave/Subterranean habitat.
+
+Species living in a Wetlands habitat have a 1.69% MORE of a chance of being extinct than species living in a Cave/Subterranean habitat.
+
+#### Threat
+
+Next was the type of threat that the species faces. Running another logistic regression model on this showed that threat types of Agriculture and Aquaculture, Pollution and Invasive species/Diseases are significant.
+
+```{r}
+summary(threat)
+```
+
+```{r include = FALSE}
+#probability for Agr/Aqu
+agr <- function(p) {(1-p)*exp(-3.83204) - p}
+ag_p <- uniroot(agr, interval = c(-1000, 1000))$root * 100
+ag_p
+
+
+#probability for Disease/Invasive species
+dis <- function(p) {(1-p)*exp(-3.83204 + 1.6656) - p}
+uniroot(dis, interval = c(-1000, 1000))$root * 100 - ag_p
+
+#probability for Pollution 
+pln <- function(p) {(1-p)*exp(-3.83204 + 0.43810) - p}
+uniroot(pln, interval = c(-1000, 1000))$root * 100 - ag_p
+
+```
+
+Again, summarizing our significant results compared to the reference group:
+
+Species threatened by Agriculture/Aquaculture have a 2.12% chance of also being extinct
+
+Species threatened by Invasive species/Disease have a 8.16% more chance of being extinct than species threatened by Agriculture/Aquaculture
+
+Species threatened by Pollution have a 1.1% more chance of being extinct than species threatened by Agriculture/Aquaculture
+
+#### Use
+
+Use seemed like another appropriate variable to investigate. Perhaps species that provide medicinal or energy uses are extracted at more unsustainable rates than a species that provides an artisinal use.
+
+```{r}
+summary(use)
+```
+
+This shows that the human use for each species is not significant for predicting extinction. A potential problem with this though, is the amount of missing data in this column.
+
+```{r}
+predictors_2 |> 
+  filter(is.na(use)) |> 
+  count()
+```
+
+Out of our over 70,000 species observations, approximately 51,000 of these do not have associated use cases. This may be because we simply don't have a human use for many species, or that the uses just aren't properly documented.
+
+#### Taxonomy
+
+Taxonomy seemed like another interesting variable to investigate. It seems likely that more closely-related species will face similar extinction pressures. Since we're working within the Animalia Kingdom, we will run a logistic regression using the class of each species.
+
+```{r}
+summary(taxa)
+```
+
+There are quite a few classes that look to be significant here. Especially significant classes appear to be, Actinopterygii (Ray-finned fishes, our reference group) Amphibians, Anthozoans, Arachnids, Aves, Bivalves, and Gastropods. We will keep an eye on these classes of organisms as we build our larger model.
+
+```{r include = FALSE}
+#probability for ray-finned fishes
+aq <- function(p) {(1-p)*exp(-4.41151) - p}
+aqp <- uniroot(aq, interval = c(-1000, 1000))$root * 100
+aqp
+
+#probability for anthozoans
+anth <- function(p) {(1-p)*exp(-4.41151 - 1.44785) - p}
+uniroot(anth, interval = c(-1000, 1000))$root * 100 - aqp
+
+#probability for Amphibians
+amph <- function(p) {(1-p)*exp(-4.41151 + 0.95113) - p}
+uniroot(amph, interval = c(-1000, 1000))$root * 100 - aqp
+
+#probability for Arachnids
+ara <- function(p) {(1-p)*exp(-4.41151 + 1.96338) - p}
+uniroot(ara, interval = c(-1000, 1000))$root * 100 - aqp
+
+#probability for Aves
+aves <- function(p) {(1-p)*exp(-4.41151 + 0.33808) - p}
+uniroot(aves, interval = c(-1000, 1000))$root * 100 - aqp
+
+#probability for bivalves
+biv <- function(p) {(1-p)*exp(-4.41151 + 1.86306) - p}
+uniroot(biv, interval = c(-1000, 1000))$root * 100 - aqp
+
+#probability for gastropods
+gast <- function(p) {(1-p)*exp(-4.41151 + 1.84916) - p}
+uniroot(gast, interval = c(-1000, 1000))$root * 100 - aqp
+```
+
+Species within the Actinopterygii class have a 1.2% chance of being extinct
+
+Species within the Anthozoa class have a 0.91% LESS of a chance of being extinct than Actinopterygii
+
+Species within the Amphibian class have a 1.84% MORE of a chance of being extinct than Actinopterygii
+
+Species within the Arachnid class have a 6.76% MORE of a chance of being extinct than Actinopterygii
+
+Species within the Aves class have a 0.474% MORE of a chance of being extinct than Actinopterygii
+
+Species within the Bivalve class have a 6.05% MORE of a chance of being extinct than Actinopterygii
+
+Species within the Gastropod class have a 5.96% MORE of a chance of being extinct than Actinopterygii
+
+#### Stepwise Model
+
+Now, we want to see if any of these significant levels of previous variables hold up when we start to add our variables together for a more complete model. We start with predicting extinction off of one variable, endemism, and then incrementally add our other variables of interest. We use a stepwise AIC function - which will take a look at each step, and output scores for each step of the model, indicating which model does the best job at predicting extinction.
+
+```{r}
+#Defining each step we want to put in our final model 
+step1 <- glm(extinct~endemic, family = 'binomial',data = predictors_2)
+step2 <- glm(extinct~endemic + habitat, family = 'binomial',data = predictors_2)
+step3 <- glm(extinct~endemic + habitat + threat, family = 'binomial',data = predictors_2)
+step4 <- glm(extinct~endemic + habitat + threat + class, family = 'binomial',data = predictors_2)
+step5 <- glm(extinct~endemic + habitat + threat + class + use, family = 'binomial',data = predictors_2)
+
+
+
+models <- list(step1, step2, step3, step4, step5)
+names <- c('endemic', 'endemic_habitat', 'endemic_habitat_threat', 'endemic_habitat_threat_class', 'endemic_habitat_threat_class_use')
+
+aictab(cand.set = models, modnames = names)
+```
+
+The last step in our model has the lowest AIC score, and appears to be the best. This is slightly worrying, since it is the most complicated model - it uses 56 different parameters (1 for each level of each variable) to predict extinction. This could potentially indicate over-fitting, so we're going to take a look at our coefficients and significance levels of our variable levels, to see which levels remain robust.
+
+```{r}
+summary(step5)
+```
+
+The coefficient for endemism changed from 0.7 \~ 1.5, noticeable, but not enough to cause concern. Especially since its significance level remains far below any conventional significance threshold, we can remain confident that Endemic species are indeed more likely to be extinct. This is a robust indicator.
+
+Similarly, threats of Pollution and Invasive Species/diseases remain robust in our more complete model. The significance levels are far below the usual significance thresholds of 0.05 and 0.01, indicating that this is also a robust indicator.
+
+Finally, species in the Aves taxa also look like they're remaining robust - although to a lesser degree. The significance level decreases quite a bit from when we evaluated taxa on their own, and the coefficient changed from 0.33 to 2.11. This indicates that there may be an interaction effect between taxa and one of the other variables.
+
+#### Predictions
+
+```{r}
+augmented_mod <- augment(step4, type.predict = 'response') |> 
+  mutate(predictions = .fitted)
+
+t.test(predictions~endemic, data = augmented_mod)
+```
+
+## Issues
+
+#### Assumptions
+
+I categorized species that are classified as "extinct in the wild" as extinct, since we are interested in species outside of captivity. I also took a case by case approach to classify some of the critically endangered species with values of the variable "Possibly extinct" as "TRUE" as extinct - since many of these species have not been seen in many years (our chinese river dolphin friend actually falls into this category, it is listed as critically endangered despite not having been seen since 2007) and are widely agreed to be at least functionally extinct (where there are so few members of the species surviving in the wild that it is unlikely they will ever come into contact).
+
+#### Simplifications
+
+To ensure that each observation was a species and that there werent multiple observations of the same species, I had to categorize each of the sub habitats into one general habitat - ie tropical rainforests in costa rica and boreal forests in siberia are both considered forests, and I also had to collapse species that live in multiple habitats into one habitat. I took similar approaches with the threat type, generalizing each sub type into one general type, collapsing species facing multiple threats into one threat, as well as the use case. Each of these introduces its own oversimplification issues, and should be explored more thoroughly in future investigations
+
+#### Limitations
+
+On top of all this, it is extremely difficult to study extinction. We don't have crucial data on population dynamics, geographic range, reproductive capacity, genetic diversity, and many other important factors for many species. In fact, there are probably still millions of species of plants and animals that we have yet to identify, let alone gather enough pertinent data to understand its status. The IUCN has assessed only \~7% of its described species. Even for species that we are aware of, it is very difficult to tell if a species is actually extinct. To illustrate an extreme example of how bad we are at this, we'll take a look at the Coelecanths.
+
+This genus disappeared from the fossil record 66 million years ago and was presumed to be extinct along with the dinosaurs. In 1938, one species of Coelecanth was rediscovered in a fishing net off the South African Coast. Here it is, a living dinosaur, alive and swimming.
+
+![](images/coelecanth.jpeg)
+
+Since then, another Coelecanth species has been rediscovered, and over 100 individual specimens have been recorded. Coelecanths are classified as critically endangered, the IUCN estimates that fewer than 500 exist in the wild, and are suffering as a result of over-fishing. This is one example of a Lazarus taxon - an evolutionary line that disappeared from the fossil record only to reappear much later.
+
+## Next Steps
+
+A logical next step to continue this analysis would be to more carefully investigate each variable individually by categorizing them even more broadly. Since we're testing so many different parameters here, our model is likely to find significance regardless if the effect is actually there or not.
+
+Additionally, it is highly likely that many of these variables are interacting with each other. Meaning that one variable likely influences the outcome, and is correlated with another variable. For example, species more closely related (have similar taxonomy) are probably more likely to share habitats, which will also influence how likely it is that they are extinct. Species that share habitats are also probably more likely to share similar threats - especially in habitats undergoing destruction. To address this, we would add interacting terms (habitat:class, threat:habitat) and take a look at how the coefficients change from model to model again. If we find that the coefficients for any of our variables and our intercept change dramatically, then it is likely that we have an interaction effect.
+
+Another idea to investigate that I suspect plays an important role in species extinction is its ecological niche and trophic level. A specialist species with a narrow ecological niche would likely be much more sensitive to changes in environmental conditions - and is therefore likely more prone to extinction than a generalist species that can fill a variety of niches. Similarly, I suspect that species at low trophic levels are much less likely to go extinct than species at higher trophic levels, because they have lower energy requirements and depend on less of the food chain. In the case of an ecosystem collapse, species at higher trophic levels will likely be the first to die out.
+
+Finally, this analysis only uses data from the Animal kingdom. An analysis incorporating plants, arachaea, fungi, and eubacteria would certainly give us a more full picture of extinction. However given the data that we have available, we are far far away from being able to perform this analysis properly.
+
+## Conclusion
+
+Our picture of extinction is far from complete. In fact, our picture of species is far from complete. scientists estimate that there are around 8.7 million species of plants and animals in existence[^5], yet we've only identified 1.2 million. This doesn't even include lifes kingdoms of which we know the least - the Fungi, Archaea, Protozoa, and Bacteria. Its accepted among scientists that some species among us today will go extinct far before they are discovered. Species will continue to go extinct due to our mistreatment of the natural world - and we will lose far more than simply the services they provide to humans. As of right now, there is no reversing extinction (although this is likely to change).
+
+[^5]: Sweetlove, L. Number of species on Earth tagged at 8.7 million. Nature (2011). https://doi.org/10.1038/news.2011.498
+
+Despite this bleak reality, we are in a better position to address and mitigate our predicament than we were even just a few decades ago. Our tools to understand the natural world, our policies to safeguard it, and our desire to protect it are becoming more interconnected every day. With better information, we are able to make better decisions to become better stewards of the planet. If one thing is clear, the more we learn about life, the more it surprises us. Despite our ongoing destruction of much of the natural world, life finds a way.

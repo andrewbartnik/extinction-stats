@@ -1,0 +1,87 @@
+---
+title: "Extinction"
+author: "Andrew Bartnik"
+date: "2022-12-01"
+format: 
+  revealjs: 
+    theme: dark
+---
+
+![](images/big_five.png)
+
+[![Our World in Data: Extinction]](https://ourworldindata.org/extinctions)
+
+::: {.notes}
+Species extinction is a normal part of Earth's natural history, as over 99.9% of species to ever have existed on Earth have gone extinct. Background extinction under normal conditions is expected to between 0.1 - 1 species to go extinct every 100 years per 10,000 species. However, throughout Earth's history there have been calamitous events such as asteroid impacts, volcanic eruptions, and sudden atmospheric changes that have rapidly changed the conditions on Earth to be unsuitable for life.
+
+The current species extinction rate is estimated to be between 1,000 and 10,000 times higher than the normal background extinction rate, which is considered enough to consider our current time period the 6th mass extinction event - due to various human activities. 
+
+:::
+# 2
+
+::: {.notes}
+You may be familiar with some of the species that have recently gone extinct due to human activity. Among these are the Chinese River dolphin, which lived in the Yangtze river of China and was last seen in 2007 - thought to be driven to extinction due to heavy use of the river for fishing, transportation and hydroelectricity. 
+
+The Tasmanian Tiger which lived on Tasmania, a small island south east of Australia, was hunted to extinction in the 1930s
+
+And the famous Dodo bird, endemic to the island of Mauritius lacked adaptations to prevent its own extinction from hunting by sailors and habitat destruction.
+:::
+
+# 3
+
+::: {.notes}
+We care about this because species provide us not only with important sources of medicine, food, and other various products, but also play important roles in each of their respective ecosystems on which much of our societies depend. Each species also helps us elucidate the story of life's history on Earth and contextualizes our place on Earth and our relationship with the natural world. More importantly however, species have intrinsic value regardless of what they provide for humans, and each one lost is a tragedy in its own right.   
+
+Its important to understand what the factors render species vulnerable to extinction, as well as what the mechanisms of extinction are and how they work. Extinction is notoriously difficult to study for reasons I will discuss later, but we can hopefully use some of these findings to identify which species may be more or less vulnerable and better protect them and their ecosystems from extinction and collapse. 
+:::
+
+# 4 
+::: {.notes}
+For this analysis, I used data from the IUCN redlist of threatened species to investigate some of the factors that I suspected may influence extinction. We will only be focusing on species within the kingdom Animalia, for the sake of simplicity. 
+:::
+
+# 5 
+::: {.notes}
+After cleaning the data, each row represented one species with a unique assessment I.D, and each column contained a variable that I imagined might influence extinction. The variables that I focused on were: species endemism, habitat type, the type of threat they face, their use for humans, and their taxonomy. I ran a logistic linear regression on each of these individually to try and predict extinct (1) or extant (0) - to investigate which categories in each variable were more highly associated with extinction, and then made a more general logistic regression using each of these variables as predictors.
+:::
+
+::: {.notes}
+I first investigated endemism - a species endemic to santa barbra means it is found nowhere else in the world outside of santa barbara. This seemed like a good place to start, since an endemic species is geographically and genetically restricted to one location which seems like it would make it much more prone to extinction than a more dispersed species. 
+:::
+
+::: {.notes}
+I then investigated the type of habitat the species lives in. For simplicity, I had to categorize each of the sub habitats into one general habitat - ie tropical rainforests in costa rica and boreal forests in siberia are both considered forests, and I also had to 
+:::
+
+
+
+# Issues
+::: {.notes}
+A few limitations to my study are as follows: 
+
+I categorized species that are classified as "extinct in the wild" as extinct, since we are interested in species outside of captivity. I also took a case by case approach to classify some of the critically endangered species with values of the variable "Possibly extinct" as "TRUE" as extinct - since many of these species have not been seen in many years (our chinese river dolphin friend actually falls into this category, it is listed as critically endangered despite not having been seen since 2007) and are widely agreed to be at least functionally extinct (where there are so few members of the species surviving in the wild that it is unlikely they will ever come into contact). 
+
+To ensure that each observation was a species and that there werent multiple observations of the same species, I had to categorize each of the sub habitats into one general habitat - ie tropical rainforests in costa rica and boreal forests in siberia are both considered forests, and I also had to collapse species that live in multiple habitats into one habitat. I took similar approaches with the threat type, generalizing each sub type into one general type, collapsing species facing multiple threats into one threat, as well as the use case. Each of these introduces its own oversimplification issues, and should be explored more thoroughly in future investigations
+:::
+
+# Hard to study Extinction
+
+::: {.notes}
+On top of all this, it is extremely difficult to study extinction. We don't have crucial data on population dynamics, geographic range, reproductive capacity, genetic diversity, and many other important factors for many species. It is also very difficult to tell if a species is actually extinct. To illustrate how bad we are at this, take the coelecanth genus for example. 
+
+This genus disappeared from the fossil record 66 million years ago and was presumed to be extinct along with the dinosaurs. In 1938, one species of coelecanth was rediscovered in a fishing net off the South African Coast. Since then, another coelecanth species has been rediscovered, and over 100 individual specimens have been recorded. Coelecanths are classified as critically endangered, the IUCN estimates that fewer than 500 exist in the wild, and are suffering as a result of overfishing. This is one example of a Lazaurus taxon - an evolutionary line that disappeared from the fossil record only to reappear much later.
+
+Let me iterate this: we thought this group of species were extinct for 66 MILLION years, yet here it is, alive and swimming. 
+
+:::
+
+
+# Next steps
+::: {.notes}
+To more thoroughly explore this question, 
+
+If one thing is clear, the more we learn about life, the more it surprises us. Despite our ongoing destruction of much of the natural world, life finds a way. We should do more to help.
+:::
+
+
+
